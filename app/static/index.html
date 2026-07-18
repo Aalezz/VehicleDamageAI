@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suraya Car — AI Vehicle Damage Assessment & Pre-Purchase Inspection</title>
+<meta name="description" content="Professional AI vehicle inspection. Detect damage, grade severity and estimate repair costs from photos — before you buy, sell or file a claim.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d16; --bg2:#0d1120; --card:#111527; --card2:#161b30; --border:#222842; --border2:#2e3654;
+    --text:#e9edf6; --muted:#949cb5; --dim:#5c6480; --accent:#2f6bff; --accent-h:#4d81ff;
+    --green:#10b981; --yellow:#f59e0b; --red:#ef4444;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  ::selection{background:rgba(47,107,255,.35)}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+
+  header{position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,13,22,.8);backdrop-filter:blur(16px)}
+  .nav{display:flex;justify-content:space-between;align-items:center;height:68px}
+  .brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;letter-spacing:-.02em}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#6d4dff);display:flex;align-items:center;justify-content:center}
+  .brand .mark svg{width:19px;height:19px;stroke:#fff}
+  nav.links{display:flex;align-items:center;gap:26px}
+  nav.links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:color .2s}
+  nav.links a:hover{color:var(--text)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;text-decoration:none}
+  .btn:hover{background:var(--accent-h);transform:translateY(-1px);box-shadow:0 10px 26px -8px rgba(47,107,255,.55)}
+  .btn.ghost{background:transparent;border:1px solid var(--border2);color:var(--text)}
+  .btn.ghost:hover{border-color:var(--accent);box-shadow:none;background:rgba(47,107,255,.06)}
+  .btn.sm{padding:7px 13px;font-size:13px;border-radius:8px}
+  .btn.lg{padding:14px 26px;font-size:15px;border-radius:11px}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+  .hero{position:relative;padding:96px 0 80px;background:
+    radial-gradient(52% 60% at 78% 12%, rgba(47,107,255,.14) 0%, transparent 70%),
+    radial-gradient(40% 50% at 12% 80%, rgba(109,77,255,.10) 0%, transparent 70%)}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+  @media(max-width:920px){.hero-grid{grid-template-columns:1fr}}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-h);background:rgba(47,107,255,.1);border:1px solid rgba(47,107,255,.25);padding:6px 14px;border-radius:999px;margin-bottom:22px;animation:fadeUp .8s ease both}
+  .hero h1{font-size:clamp(34px,4.6vw,54px);font-weight:800;letter-spacing:-.03em;line-height:1.08;margin-bottom:20px;animation:fadeUp .8s .08s ease both}
+  .hero h1 .grad{background:linear-gradient(90deg,var(--accent-h),#8f7bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lead{color:var(--muted);font-size:17px;line-height:1.65;max-width:520px;margin-bottom:32px;animation:fadeUp .8s .16s ease both}
+  .hero .cta{display:flex;gap:14px;flex-wrap:wrap;animation:fadeUp .8s .24s ease both}
+  .hero .note{margin-top:14px;font-size:13px;color:var(--muted);animation:fadeUp .8s .3s ease both}
+
+  .mock{position:relative;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:0 40px 80px -40px rgba(0,0,0,.8);animation:fadeUp .9s .2s ease both}
+  .mock .mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .mock .mtitle{font-size:13px;font-weight:600;color:var(--muted)}
+  .mock .chip{font-size:11px;font-weight:700;color:var(--green);background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);padding:3px 10px;border-radius:999px}
+  .mock .photo{position:relative;height:170px;border-radius:11px;overflow:hidden;background:linear-gradient(145deg,#1a2138,#0e1322);border:1px solid var(--border)}
+  .mock .photo svg{position:absolute;inset:0;width:100%;height:100%}
+  .mock .scan{position:absolute;left:0;right:0;height:44%;top:-46%;background:linear-gradient(180deg,transparent,rgba(47,107,255,.16) 82%,rgba(77,129,255,.65));animation:scan 3.2s cubic-bezier(.4,0,.4,1) infinite}
+  .mock .bx{position:absolute;border:2px solid var(--accent-h);border-radius:5px;opacity:0;animation:pop .4s ease forwards}
+  .mock .bx small{position:absolute;top:-20px;left:-2px;background:var(--accent);color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;letter-spacing:.02em}
+  .mock .rows{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+  .mock .mrow{display:flex;justify-content:space-between;align-items:center;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:10px 13px;font-size:12.5px;opacity:0;animation:fadeUp .5s ease forwards}
+  .mock .mrow b{font-weight:600}
+  .mock .mrow .money{font-weight:700;font-variant-numeric:tabular-nums}
+  .mock .msum{display:flex;justify-content:space-between;margin-top:12px;padding:12px 13px;border-radius:9px;background:rgba(47,107,255,.1);border:1px solid rgba(47,107,255,.3);font-size:13px;font-weight:700;opacity:0;animation:fadeUp .5s 2.6s ease forwards}
+
+  @keyframes scan{0%{top:-46%}55%{top:102%}100%{top:102%}}
+  @keyframes pop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.visible{opacity:1;transform:none}
+
+  section{padding:84px 0}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 52px}
+  .sec-head .eyebrow{margin-bottom:16px}
+  .sec-head h2{font-size:clamp(26px,3.2vw,38px);font-weight:800;letter-spacing:-.02em;margin-bottom:14px}
+  .sec-head p{color:var(--muted);font-size:15.5px;line-height:1.65}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:step}
+  @media(max-width:820px){.steps{grid-template-columns:1fr}}
+  .step{position:relative;background:var(--card);border:1px solid var(--border);border-radius:15px;padding:30px 26px;transition:border-color .25s,transform .25s}
+  .step:hover{border-color:var(--border2);transform:translateY(-4px)}
+  .step .n{font-size:12px;font-weight:700;color:var(--accent-h);letter-spacing:.1em;margin-bottom:14px}
+  .step .ic{width:44px;height:44px;border-radius:11px;background:rgba(47,107,255,.1);border:1px solid rgba(47,107,255,.22);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+  .step .ic svg{width:22px;height:22px;stroke:var(--accent-h)}
+  .step h3{font-size:16.5px;font-weight:700;margin-bottom:9px;letter-spacing:-.01em}
+  .step p{color:var(--muted);font-size:14px;line-height:1.62}
+
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:820px){.feat{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.feat{grid-template-columns:1fr}}
+  .ft{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:24px;transition:border-color .25s}
+  .ft:hover{border-color:var(--border2)}
+  .ft svg{width:20px;height:20px;stroke:var(--accent-h);margin-bottom:14px}
+  .ft h4{font-size:14.5px;font-weight:600;margin-bottom:7px}
+  .ft p{color:var(--muted);font-size:13px;line-height:1.6}
+
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:36px;background:var(--card);border:1px solid var(--border);border-radius:18px}
+  @media(max-width:760px){.metrics{grid-template-columns:1fr 1fr}}
+  .metric{text-align:center}
+  .metric b{display:block;font-size:34px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .metric span{font-size:12.5px;color:var(--muted);margin-top:5px;display:block}
+  .metric small{color:var(--dim);font-size:11px}
+
+  .app-grid{display:grid;grid-template-columns:410px 1fr;gap:22px}
+  @media(max-width:920px){.app-grid{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px}
+  .panel h3{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px}
+  .seg{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:22px}
+  .seg .opt{flex:1;text-align:center;padding:9px 8px;font-size:13px;font-weight:600;color:var(--muted);border-radius:7px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px}
+  .seg .opt.active{background:var(--accent);color:#fff}
+  .seg .pro-tag{font-size:9px;font-weight:800;background:rgba(255,255,255,.22);padding:2px 6px;border-radius:5px;letter-spacing:.06em}
+  .seg .opt:not(.active) .pro-tag{background:rgba(47,107,255,.18);color:var(--accent-h)}
+  select,input[type=text]{width:100%;padding:11px 13px;border-radius:9px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;margin:6px 0 14px;transition:border-color .2s}
+  select:focus,input:focus{outline:none;border-color:var(--accent)}
+  label{font-size:12.5px;font-weight:500;color:var(--muted)}
+  .veh-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+  .drop{border:1.5px dashed var(--border2);border-radius:12px;padding:30px 16px;text-align:center;cursor:pointer;transition:.25s;color:var(--muted);background:var(--bg2)}
+  .drop:hover,.drop.over{border-color:var(--accent);background:rgba(47,107,255,.05)}
+  .drop img{max-width:100%;max-height:190px;border-radius:8px}
+  .drop .dz-ic{width:40px;height:40px;border-radius:10px;background:rgba(47,107,255,.1);display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px}
+  .drop .dz-ic svg{width:20px;height:20px;stroke:var(--accent-h)}
+  .drop p{font-size:13.5px;font-weight:500;color:var(--text)}
+  .drop small{font-size:12px;color:var(--dim)}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .row{display:flex;align-items:center;gap:12px;margin:16px 0}
+  .trial-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);color:var(--green);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;margin-bottom:16px}
+  .err{color:var(--red);font-size:13px;min-height:18px;margin-top:8px}
+  .warnbox{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.35);color:#fbbf24;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.55;margin-bottom:16px}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .tab{padding:8px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--bg2);color:var(--muted);border:1px solid var(--border);transition:.2s}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .result-img{width:100%;border-radius:11px;border:1px solid var(--border)}
+  .dmg{display:flex;justify-content:space-between;align-items:center;background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:15px 17px;margin-bottom:10px;animation:fadeUp .5s ease both}
+  .dmg b{font-size:14.5px;font-weight:600}
+  .dmg .sub{color:var(--muted);font-size:12.5px;margin-top:3px}
+  .dmg .money{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+  .sev{font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:4px 10px;border-radius:999px}
+  .sev.minor{background:rgba(16,185,129,.12);color:var(--green)}
+  .sev.moderate{background:rgba(245,158,11,.12);color:var(--yellow)}
+  .sev.severe{background:rgba(239,68,68,.12);color:var(--red)}
+  .total{display:flex;justify-content:space-between;align-items:center;font-size:16.5px;font-weight:800;padding:17px 18px;background:rgba(47,107,255,.08);border:1px solid rgba(47,107,255,.28);border-radius:11px;margin-top:14px;font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted);font-size:12.5px}
+  .spinner{border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;width:30px;height:30px;animation:spin .9s linear infinite;margin:22px auto}
+
+  .plans-toggle{display:inline-flex;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:4px;margin:0 auto 40px}
+  .plans-toggle .opt{padding:9px 22px;font-size:13.5px;font-weight:600;color:var(--muted);border-radius:7px;cursor:pointer;transition:.2s}
+  .plans-toggle .opt.active{background:var(--accent);color:#fff}
+  .plans-toggle .save{color:var(--green);font-weight:700}
+  .plans-toggle .opt.active .save{color:#c7f9e5}
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
+  @media(max-width:860px){.plans{grid-template-columns:1fr}}
+  .plan{position:relative;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:30px 28px;display:flex;flex-direction:column;transition:border-color .25s,transform .25s}
+  .plan:hover{transform:translateY(-4px)}
+  .plan.hot{border-color:var(--accent);box-shadow:0 24px 60px -30px rgba(47,107,255,.4)}
+  .plan .pop{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:4px 14px;border-radius:999px}
+  .plan h3{font-size:16px;font-weight:700;margin-bottom:6px}
+  .plan .desc{color:var(--muted);font-size:13px;margin-bottom:20px;min-height:32px}
+  .plan .price{font-size:40px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .plan .price small{font-size:14px;font-weight:500;color:var(--muted)}
+  .plan .bill{font-size:12px;color:var(--dim);min-height:16px;margin-bottom:20px}
+  .plan ul{list-style:none;margin:0 0 26px;flex:1}
+  .plan li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--muted);padding:6px 0;line-height:1.5}
+  .plan li svg{width:15px;height:15px;stroke:var(--green);flex-shrink:0;margin-top:2px}
+
+  details.faq{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  details.faq summary{padding:18px 22px;cursor:pointer;font-size:14.5px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  details.faq summary::-webkit-details-marker{display:none}
+  details.faq summary:after{content:'+';font-size:20px;font-weight:400;color:var(--muted);transition:transform .25s}
+  details.faq[open] summary:after{transform:rotate(45deg)}
+  details.faq .a{padding:0 22px 18px;color:var(--muted);font-size:13.5px;line-height:1.68}
+
+  .cta-band{background:linear-gradient(135deg,rgba(47,107,255,.14),rgba(109,77,255,.1));border:1px solid rgba(47,107,255,.3);border-radius:20px;padding:52px 40px;text-align:center}
+  .cta-band h2{font-size:clamp(24px,3vw,34px);font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
+  .cta-band p{color:var(--muted);font-size:15px;margin-bottom:26px}
+
+  .usage-bar{height:7px;background:var(--bg2);border-radius:6px;overflow:hidden;margin-top:10px}
+  .usage-bar div{height:100%;background:var(--accent);border-radius:6px;transition:width .8s ease}
+  .keys li{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);list-style:none;font-size:13px}
+  code{background:var(--bg2);border:1px solid var(--border);padding:2px 7px;border-radius:6px;font-size:12px;word-break:break-all;font-family:ui-monospace,monospace}
+  dialog{background:var(--card);color:var(--text);border:1px solid var(--border2);border-radius:16px;padding:32px;width:392px;max-width:92vw}
+  dialog::backdrop{background:rgba(4,6,12,.75);backdrop-filter:blur(4px)}
+  dialog h2{font-size:20px;font-weight:800;letter-spacing:-.01em}
+  dialog input{width:100%;padding:12px 14px;margin:6px 0 16px;border-radius:9px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit}
+  dialog input:focus{outline:none;border-color:var(--accent)}
+
+  footer{border-top:1px solid var(--border);padding:56px 0 40px;background:var(--bg2)}
+  .foot{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;margin-bottom:40px}
+  @media(max-width:760px){.foot{grid-template-columns:1fr 1fr}}
+  .foot h5{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:14px}
+  .foot a{display:block;color:var(--muted);text-decoration:none;font-size:13.5px;padding:4px 0;transition:color .2s}
+  .foot a:hover{color:var(--text)}
+  .foot .about{color:var(--muted);font-size:13.5px;line-height:1.65;max-width:280px;margin-top:12px}
+  .legal{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);color:var(--dim);font-size:12.5px;flex-wrap:wrap;gap:10px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h-2v-6l2-5h9l4 5h2a2 2 0 0 1 2 2v4h-2"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="16.5" cy="17.5" r="2"/></svg></div>
+      Suraya Car
+    </div>
+    <nav class="links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#try">Inspect a car</a>
+      <a href="#pricing">Pricing</a>
+      <span id="nav-auth" style="display:inline-flex;gap:10px">
+        <button class="btn ghost sm" onclick="openAuth('login')">Sign in</button>
+        <button class="btn sm" onclick="openAuth('register')">Get started</button>
+      </span>
+      <span id="nav-user" style="display:none;align-items:center;gap:10px">
+        <span class="muted" id="user-email"></span>
+        <button class="btn ghost sm" onclick="toggleDash()">Dashboard</button>
+        <button class="btn ghost sm" onclick="logout()">Sign out</button>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">AI vehicle intelligence</span>
+      <h1>Every car has a history.<br><span class="grad">See it before you pay.</span></h1>
+      <p class="lead">Suraya Car analyzes photos of any vehicle with computer vision — locating body damage, grading its severity, and pricing the repair for that exact make, model and year. In seconds, not days.</p>
+      <div class="cta">
+        <button class="btn lg" onclick="document.getElementById('try').scrollIntoView()">Start free inspection</button>
+        <button class="btn ghost lg" onclick="document.getElementById('how').scrollIntoView()">See how it works</button>
+      </div>
+      <p class="note">3 free scans · No account required · No credit card</p>
+    </div>
+    <div class="mock" aria-hidden="true">
+      <div class="mhead"><span class="mtitle">Damage Assessment — 2021 BMW 3 Series</span><span class="chip">COMPLETE</span></div>
+      <div class="photo">
+        <svg viewBox="0 0 400 170" preserveAspectRatio="xMidYMid slice">
+          <rect width="400" height="170" fill="#131a2e"/>
+          <path d="M60 118 L82 78 Q90 64 118 60 L250 56 Q280 56 300 74 L330 92 Q352 96 356 108 L358 118 Z" fill="#1f2946" stroke="#2e3a5e" stroke-width="1.5"/>
+          <path d="M128 76 L146 62 L232 60 L246 74 Z" fill="#31406b"/>
+          <circle cx="120" cy="120" r="20" fill="#0b0f1c" stroke="#33406a" stroke-width="3"/>
+          <circle cx="300" cy="120" r="20" fill="#0b0f1c" stroke="#33406a" stroke-width="3"/>
+          <path d="M330 96 q14 4 20 12" stroke="#f59e0b" stroke-width="2.5" fill="none"/>
+          <path d="M84 84 q10 14 -2 24 M96 90 q6 10 -2 16" stroke="#ef4444" stroke-width="2" fill="none"/>
+        </svg>
+        <div class="scan"></div>
+        <div class="bx" style="left:14%;top:38%;width:16%;height:38%;animation-delay:1.1s"><small>Fender · severe</small></div>
+        <div class="bx" style="left:78%;top:46%;width:15%;height:26%;animation-delay:1.5s"><small>Light · moderate</small></div>
+      </div>
+      <div class="rows">
+        <div class="mrow" style="animation-delay:1.9s"><span><b>Front fender</b> · panel deformation</span><span class="money">$1,350 – $3,780</span></div>
+        <div class="mrow" style="animation-delay:2.2s"><span><b>Headlight assembly</b> · cracked housing</span><span class="money">$405 – $945</span></div>
+      </div>
+      <div class="msum"><span>Estimated total repair</span><span>$1,755 – $4,725</span></div>
+    </div>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Process</span>
+      <h2>Professional inspection in three steps</h2>
+      <p>The same assessment flow used by body shops and insurance adjusters — compressed into under a minute.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="n">STEP 01</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h-2v-6l2-5h9l4 5h2a2 2 0 0 1 2 2v4h-2"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="16.5" cy="17.5" r="2"/></svg></div>
+        <h3>Identify the vehicle</h3>
+        <p>Select the make, model and year. Repair pricing is calibrated to that specific vehicle — a bumper on a 2024 BMW is not priced like one on a 2010 Corolla.</p>
+      </div>
+      <div class="step reveal">
+        <div class="n">STEP 02</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <h3>Capture the evidence</h3>
+        <p>Upload one photo of the damage, or walk around the vehicle for a complete pre-purchase inspection. Standard phone photos are sufficient.</p>
+      </div>
+      <div class="step reveal">
+        <div class="n">STEP 03</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <h3>Receive the report</h3>
+        <p>Annotated imagery, severity classification per damage, itemized repair estimates, and an overall condition grade you can negotiate with.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Capabilities</span>
+      <h2>Built like an expert appraiser</h2>
+      <p>A two-stage deep learning system — detection and severity classification — with transparent, explainable output.</p>
+    </div>
+    <div class="feat">
+      <div class="ft reveal"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><h4>Damage localization</h4><p>Detects and boxes damage across seven body zones: bonnet, bumper, doors, fenders, lights, trunk and windshield.</p></div>
+      <div class="ft reveal"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 4v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/></svg><h4>Severity grading</h4><p>Each finding is classified minor, moderate or severe by a dedicated neural classifier trained on real accident imagery.</p></div>
+      <div class="ft reveal"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><h4>Vehicle-aware pricing</h4><p>Estimates adjust to brand tier and vehicle age — premium and luxury marques carry realistic parts and labor premiums.</p></div>
+      <div class="ft reveal"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg><h4>Explainable AI</h4><p>Grad-CAM heatmaps show exactly which pixels drove each decision — no black-box verdicts.</p></div>
+      <div class="ft reveal"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h4>Condition reports</h4><p>Full-vehicle inspections produce an A–E condition grade with a purchase recommendation — built for used-car buyers.</p></div>
+      <div class="ft reveal"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><h4>Developer API</h4><p>REST API with key-based authentication for dealerships, marketplaces and insurers. Full OpenAPI documentation.</p></div>
+    </div>
+    <div class="metrics reveal" style="margin-top:44px">
+      <div class="metric"><b><span data-count="82">0</span>%</b><span>Detection mAP@0.5</span><small>YOLOv8m, 3,291 images</small></div>
+      <div class="metric"><b><span data-count="89">0</span>%</b><span>Severity accuracy</span><small>EfficientNetV2-S validation</small></div>
+      <div class="metric"><b>&lt;0.3s</b><span>Inference per photo</span><small>GPU deployment</small></div>
+      <div class="metric"><b><span data-count="7">0</span></b><span>Damage classes</span><small>Body zones covered</small></div>
+    </div>
+  </div>
+</section>
+
+<section id="try" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Live</span>
+      <h2>Inspect a car now</h2>
+      <p>Three complimentary scans. No account, no card.</p>
+    </div>
+
+    <div class="panel" id="dash" style="display:none;margin-bottom:22px">
+      <h3>Account</h3>
+      <div id="usage-info" class="muted">Loading…</div>
+      <div class="usage-bar"><div id="usage-fill" style="width:0%"></div></div>
+      <div style="margin-top:20px">
+        <h3>API keys</h3>
+        <ul class="keys" id="key-list"></ul>
+        <div id="new-key" style="display:none;margin:10px 0"><span class="muted">Copy now — shown once:</span><br><code id="new-key-val"></code></div>
+        <button class="btn sm" style="margin-top:12px" onclick="createKey()">New API key</button>
+        <button class="btn ghost sm" style="margin-top:12px;margin-left:8px" onclick="openPortal()">Manage billing</button>
+      </div>
+    </div>
+
+    <div class="app-grid">
+      <div class="panel reveal">
+        <div id="trial-wrap"><span class="trial-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg><span id="trial-left">3</span>&nbsp;free scans remaining</span></div>
+        <div class="seg">
+          <div class="opt active" id="mode-single" onclick="setMode('single')">Damage check</div>
+          <div class="opt" id="mode-inspect" onclick="setMode('inspect')">Full inspection <span class="pro-tag">PRO</span></div>
+        </div>
+        <h3>1 — Vehicle</h3>
+        <label>VIN (optional — auto-fills the details)</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="vin" placeholder="17-character VIN" maxlength="17" style="flex:1;text-transform:uppercase">
+          <button class="btn ghost sm" style="margin:6px 0 14px" onclick="decodeVin()">Decode</button>
+        </div>
+        <p class="muted" id="vin-msg" style="margin:-8px 0 8px;min-height:14px"></p>
+        <div class="veh-grid">
+          <div><label>Make</label><select id="veh-make"></select></div>
+          <div><label>Year</label><select id="veh-year"></select></div>
+        </div>
+        <label>Model</label><input type="text" id="veh-model" placeholder="Corolla, 3 Series, Model 3…">
+        <label>Repair market (for pricing)</label>
+        <select id="country">
+          <option value="US">United States</option>
+          <option value="SA">Saudi Arabia</option>
+          <option value="AE">UAE</option>
+          <option value="QA">Qatar</option>
+          <option value="KW">Kuwait</option>
+          <option value="TR">Turkey</option>
+          <option value="YE">Yemen</option>
+          <option value="UK">United Kingdom</option>
+          <option value="EU">Europe</option>
+        </select>
+        <h3 style="margin-top:10px" id="upload-title">2 — Damage photo</h3>
+        <p class="muted" id="mode-hint" style="margin-bottom:10px;display:none">Buying used? Upload 2–8 photos covering every side of the vehicle for a full condition report with an A–E grade.</p>
+        <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+          <div id="drop-inner"><span class="dz-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><p>Click or drag a photo here</p><small>JPEG, PNG or WebP · up to 10 MB</small></div>
+        </div>
+        <input type="file" id="file" accept="image/jpeg,image/png,image/webp" hidden>
+        <div class="row">
+          <label style="flex:1;white-space:nowrap">Sensitivity <b id="conf-val" style="color:var(--text)">0.25</b></label>
+          <input type="range" id="conf" min="0.05" max="0.9" step="0.05" value="0.25" style="flex:1.4" oninput="document.getElementById('conf-val').innerText=this.value">
+        </div>
+        <button class="btn lg" id="analyze" style="width:100%" onclick="analyze()">Run AI analysis</button>
+        <p class="err" id="an-err"></p>
+      </div>
+
+      <div class="panel reveal">
+        <h3>Assessment report</h3>
+        <div id="placeholder" class="muted" style="text-align:center;padding:70px 0">Your report will appear here</div>
+        <div id="loading" style="display:none"><div class="spinner"></div><p class="muted" style="text-align:center">Analyzing vehicle imagery…</p></div>
+        <div id="warn-banner" class="warnbox" style="display:none"></div>
+        <div id="results" style="display:none">
+          <div class="tabs">
+            <div class="tab active" data-t="detection" onclick="showTab('detection')">Detection</div>
+            <div class="tab" data-t="gradcam" onclick="showTab('gradcam')">Heatmap</div>
+            <div class="tab" data-t="report" onclick="showTab('report')">Cost report</div>
+          </div>
+          <div id="tab-detection"><img class="result-img" id="img-annotated" alt="Annotated vehicle photo"></div>
+          <div id="tab-gradcam" style="display:none"><img class="result-img" id="img-gradcam" alt="AI attention heatmap"><p class="muted" id="no-cam" style="display:none">Heatmaps require the trained severity model.</p></div>
+          <div id="tab-report" style="display:none">
+            <p class="muted" id="veh-summary" style="margin-bottom:12px"></p>
+            <div id="damage-list"></div>
+            <div class="total"><span>Estimated total</span><span id="total-cost"></span></div>
+            <p class="muted" style="margin-top:12px">Estimates are calibrated to your vehicle's brand and age. Final costs vary by region and repair shop.</p>
+          </div>
+        </div>
+        <div id="inspection-results" style="display:none">
+          <div style="display:flex;gap:18px;align-items:center;margin-bottom:18px">
+            <div id="grade-badge" style="width:76px;height:76px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;flex-shrink:0"></div>
+            <div><b id="grade-title" style="font-size:16px;letter-spacing:-.01em"></b><p class="muted" id="grade-summary" style="margin-top:4px"></p></div>
+          </div>
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:16px;margin-bottom:14px">
+            <b style="font-size:13.5px">Recommendation</b>
+            <p class="muted" style="margin-top:6px" id="grade-reco"></p>
+          </div>
+          <div id="insp-damages"></div>
+          <div class="total"><span>Estimated repairs</span><span id="insp-total"></span></div>
+          <div id="insp-angles" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px"></div>
+          <button class="btn" style="width:100%;margin-top:14px" onclick="downloadPdf()">Download PDF report</button>
+          <p class="muted" style="margin-top:12px" id="insp-disclaimer"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Pricing</span>
+      <h2>Simple, transparent plans</h2>
+      <p>Start free. Scale when your volume does. Cancel anytime.</p>
+    </div>
+    <div style="text-align:center" class="reveal">
+      <div class="plans-toggle">
+        <div class="opt active" id="int-month" onclick="setInterval_('month')">Monthly</div>
+        <div class="opt" id="int-year" onclick="setInterval_('year')">Annual <span class="save">save 20%</span></div>
+      </div>
+    </div>
+    <div id="pricing-cards" class="plans reveal"></div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap" style="max-width:760px">
+    <div class="sec-head reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2>Common questions</h2>
+    </div>
+    <div class="reveal">
+      <details class="faq"><summary>How accurate is the AI?</summary><div class="a">The damage detector reaches 82% mAP@0.5 on validation data and the severity classifier reaches ~89% accuracy. Results are strongest on clear, well-lit exterior photos. Every report includes confidence scores per finding, and heatmaps show what the model looked at — so you can judge each result yourself.</div></details>
+      <details class="faq"><summary>Can it tell if a car was repainted or previously repaired?</summary><div class="a">Not yet. Detecting resprayed panels and hidden past repairs requires a dedicated model that is on our roadmap. Today Suraya Car assesses visible body damage. For accident history, always combine the report with a VIN history check.</div></details>
+      <details class="faq"><summary>Are the repair costs guaranteed?</summary><div class="a">No — they are calibrated estimates based on US average body-shop pricing, adjusted for your vehicle's brand tier and age. Actual quotes vary by region and shop. Use the range as a negotiation baseline, not a binding quote.</div></details>
+      <details class="faq"><summary>What happens to my photos?</summary><div class="a">Photos are processed in memory for the analysis and are not shared with third parties. Assessment results (not the photos) are stored in your account history so you can review past reports.</div></details>
+      <details class="faq"><summary>Do you offer an API?</summary><div class="a">Yes. Pro and Business plans include REST API access with per-user API keys. Full interactive documentation is available at /docs once you have a key.</div></details>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="cta-band reveal">
+      <h2>Don't buy a stranger's problems.</h2>
+      <p>Run a Suraya Car inspection before you hand over the money.</p>
+      <button class="btn lg" onclick="document.getElementById('try').scrollIntoView()">Start free — 3 scans</button>
+    </div>
+  </div>
+</section>
+
+<dialog id="auth-modal">
+  <h2 id="auth-title" style="margin-bottom:6px">Sign in</h2>
+  <p class="muted" id="auth-sub" style="margin-bottom:16px"></p>
+  <div id="reg-name-wrap" style="display:none"><label>Full name</label><input id="auth-name" placeholder="Jane Doe"></div>
+  <label>Email</label><input id="auth-email" type="email" placeholder="you@company.com">
+  <label>Password</label><input id="auth-pass" type="password" placeholder="Minimum 8 characters">
+  <p class="err" id="auth-err"></p>
+  <button class="btn" style="width:100%" onclick="submitAuth()" id="auth-submit">Sign in</button>
+  <p class="muted" style="text-align:center;margin-top:14px;cursor:pointer" onclick="toggleAuthMode()" id="auth-switch">No account? Create one</p>
+</dialog>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <div class="brand" style="font-size:16px"><div class="mark" style="width:30px;height:30px"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h-2v-6l2-5h9l4 5h2a2 2 0 0 1 2 2v4h-2"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="16.5" cy="17.5" r="2"/></svg></div>Suraya Car</div>
+        <p class="about">AI-powered vehicle damage assessment and pre-purchase inspection. Built on a two-stage deep learning pipeline with explainable output.</p>
+      </div>
+      <div>
+        <h5>Product</h5>
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/docs">API documentation</a>
+      </div>
+      <div>
+        <h5>Use cases</h5>
+        <a href="#try">Used-car buyers</a>
+        <a href="#try">Dealerships</a>
+        <a href="#try">Insurance claims</a>
+        <a href="#try">Fleet operators</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="mailto:alezz.aldumaini@gmail.com">Contact</a>
+        <a href="#pricing">Business plans</a>
+      </div>
+    </div>
+    <div class="legal">
+      <span>© 2026 Suraya Car. All rights reserved.</span>
+      <span>Estimates are indicative and not a binding repair quote.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+let token=null, authMode='login', fileBlob=null, fileBlobs=[], appMode='single', interval_='month', plansData=null, trialLeft=3;
+
+const MAKES=['Toyota','Honda','Nissan','Hyundai','Kia','Mazda','Suzuki','Mitsubishi','Chevrolet','Ford','Volkswagen','Skoda','Renault','Peugeot','Fiat','Audi','BMW','Mercedes-Benz','Lexus','Volvo','Infiniti','Acura','Genesis','Jaguar','Land Rover','Cadillac','Tesla','GMC','Jeep','Dodge','Subaru','Mini','Porsche','Maserati','Bentley','Rolls-Royce','Ferrari','Lamborghini','Other'];
+document.getElementById('veh-make').innerHTML='<option value="">Select make…</option>'+MAKES.map(m=>`<option>${m}</option>`).join('');
+let yrs='<option value="0">Year…</option>';
+for(let y=2026;y>=1990;y--) yrs+=`<option>${y}</option>`;
+document.getElementById('veh-year').innerHTML=yrs;
+
+const DZ='<span class="dz-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke="#4d81ff"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>';
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+const cio=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return;
+  const el=e.target,target=+el.dataset.count;let cur=0;
+  const step=()=>{cur+=Math.max(1,Math.round(target/44));if(cur>=target)el.innerText=target;else{el.innerText=cur;requestAnimationFrame(step);}};
+  step();cio.unobserve(el);
+}),{threshold:.6});
+document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
+
+async function refreshTrial(){
+  try{
+    const r=await (await fetch('/api/v1/trial/remaining')).json();
+    trialLeft=Math.min(r.remaining, 3-(+localStorage.getItem('sc_trials')||0));
+  }catch(e){ trialLeft=3-(+localStorage.getItem('sc_trials')||0); }
+  trialLeft=Math.max(0,trialLeft);
+  document.getElementById('trial-left').innerText=trialLeft;
+}
+refreshTrial();
+
+function vehParams(){
+  const mk=document.getElementById('veh-make').value;
+  const md=document.getElementById('veh-model').value.trim();
+  const yr=document.getElementById('veh-year').value;
+  const c=document.getElementById('country').value;
+  return `&vehicle_make=${encodeURIComponent(mk)}&vehicle_model=${encodeURIComponent(md)}&vehicle_year=${yr||0}&country=${c}`;
+}
+function vehLabel(){
+  const mk=document.getElementById('veh-make').value, md=document.getElementById('veh-model').value.trim(), yr=document.getElementById('veh-year').value;
+  return [yr>0?yr:'',mk,md].filter(Boolean).join(' ');
+}
+
+async function decodeVin(){
+  const vin=document.getElementById('vin').value.trim().toUpperCase();
+  const msg=document.getElementById('vin-msg');
+  if(vin.length!==17){msg.innerText='A VIN has exactly 17 characters.';return;}
+  msg.innerText='Decoding…';
+  try{
+    const r=await fetch('/api/v1/vin/'+vin);
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.detail||'Decode failed');
+    const mk=document.getElementById('veh-make');
+    const match=[...mk.options].find(o=>o.value.toLowerCase()===(d.make||'').toLowerCase());
+    if(match)mk.value=match.value; else if(d.make){mk.value='Other';}
+    if(d.model)document.getElementById('veh-model').value=d.model;
+    if(d.year)document.getElementById('veh-year').value=d.year;
+    msg.innerText='Decoded: '+[d.year,d.make,d.model,d.engine_liters?d.engine_liters+'L':'',d.fuel].filter(Boolean).join(' ');
+  }catch(e){msg.innerText=e.message;}
+}
+
+let lastReport=null;
+async function downloadPdf(){
+  if(!lastReport||!token)return;
+  const r=await fetch('/api/v1/report/pdf',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(lastReport)});
+  if(!r.ok){alert('PDF generation failed');return;}
+  const blob=await r.blob();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='SurayaCar_Report_'+(lastReport.report_id||'X')+'.pdf';
+  a.click();
+}
+
+function setMode(m){
+  if(m==='inspect'&&!token){openAuth('register','Full vehicle inspection is a Pro feature — create your account first.');return;}
+  appMode=m;
+  document.getElementById('mode-single').classList.toggle('active',m==='single');
+  document.getElementById('mode-inspect').classList.toggle('active',m==='inspect');
+  document.getElementById('upload-title').innerText=m==='single'?'2 — Damage photo':'2 — Photos of the whole car (2–8)';
+  document.getElementById('mode-hint').style.display=m==='inspect'?'block':'none';
+  document.getElementById('file').multiple=m==='inspect';
+  fileBlob=null;fileBlobs=[];
+  document.getElementById('drop-inner').innerHTML=DZ+'<p>Click or drag '+(m==='inspect'?'photos':'a photo')+' here</p><small>JPEG, PNG or WebP · up to 10 MB each</small>';
+}
+
+function setInterval_(i){
+  interval_=i;
+  document.getElementById('int-month').classList.toggle('active',i==='month');
+  document.getElementById('int-year').classList.toggle('active',i==='year');
+  renderPricing();
+}
+async function loadPlans(){
+  try{plansData=await (await fetch('/api/v1/billing/plans')).json();}catch(e){}
+  setInterval_('month');
+}
+const PLAN_DESC={free:'For occasional checks and trying the platform.',pro:'For serious buyers, sellers and small dealers.',business:'For dealerships, marketplaces and insurers.'};
+function renderPricing(){
+  if(!plansData)return;
+  document.getElementById('pricing-cards').innerHTML=plansData.plans.map(p=>{
+    const price=interval_==='year'?p.annual_per_month:p.monthly;
+    const hot=p.id==='pro';
+    const btn=p.id==='free'
+      ?'<button class="btn ghost" style="width:100%" onclick="openAuth(\'register\')">Create free account</button>'
+      :`<button class="btn" style="width:100%" onclick="upgrade('${p.id}')">Choose ${p.name}</button>`;
+    return `<div class="plan ${hot?'hot':''}">${hot?'<span class="pop">MOST POPULAR</span>':''}
+      <h3>${p.name}</h3><p class="desc">${PLAN_DESC[p.id]||''}</p>
+      <div class="price">$${price}<small> /month</small></div>
+      <div class="bill">${interval_==='year'&&p.monthly?'Billed annually — $'+(price*12)+'/year':(p.monthly?'Billed monthly':'Free forever')}</div>
+      <ul>${p.features.map(f=>'<li>'+CHECK+f+'</li>').join('')}</ul>${btn}</div>`;
+  }).join('');
+}
+async function upgrade(plan){
+  if(!token){openAuth('register');return;}
+  const r=await fetch(`/api/v1/billing/checkout?plan=${plan}&interval=${interval_}`,{method:'POST',headers:{Authorization:'Bearer '+token}});
+  const d=await r.json();
+  if(r.ok&&d.checkout_url)location.href=d.checkout_url;
+  else alert(d.detail||'Payments are not configured yet.');
+}
+async function openPortal(){
+  const r=await fetch('/api/v1/billing/portal',{method:'POST',headers:{Authorization:'Bearer '+token}});
+  const d=await r.json();
+  if(r.ok&&d.portal_url)location.href=d.portal_url;
+  else alert(d.detail||'No billing account yet.');
+}
+loadPlans();
+
+function openAuth(m,msg){authMode=m;syncModal(msg);document.getElementById('auth-modal').showModal();}
+function toggleAuthMode(){authMode=authMode==='login'?'register':'login';syncModal();}
+function syncModal(msg){
+  const login=authMode==='login';
+  document.getElementById('auth-title').innerText=login?'Sign in':'Create your account';
+  document.getElementById('auth-sub').innerText=msg||(login?'':'Free plan includes 15 scans every month.');
+  document.getElementById('auth-submit').innerText=login?'Sign in':'Create account';
+  document.getElementById('auth-switch').innerText=login?'No account? Create one':'Have an account? Sign in';
+  document.getElementById('reg-name-wrap').style.display=login?'none':'block';
+  document.getElementById('auth-err').innerText='';
+}
+async function submitAuth(){
+  const email=document.getElementById('auth-email').value.trim();
+  const pass=document.getElementById('auth-pass').value;
+  const err=document.getElementById('auth-err');err.innerText='';
+  try{
+    if(authMode==='register'){
+      const r=await fetch('/api/v1/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass,full_name:document.getElementById('auth-name').value})});
+      if(!r.ok)throw new Error((await r.json()).detail||'Registration failed');
+    }
+    const form=new URLSearchParams({username:email,password:pass});
+    const r2=await fetch('/api/v1/auth/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:form});
+    if(!r2.ok)throw new Error((await r2.json()).detail||'Sign in failed');
+    token=(await r2.json()).access_token;
+    document.getElementById('auth-modal').close();
+    setUser(email);
+  }catch(e){err.innerText=e.message;}
+}
+function setUser(email){
+  document.getElementById('nav-auth').style.display='none';
+  document.getElementById('nav-user').style.display='inline-flex';
+  document.getElementById('user-email').innerText=email;
+  document.getElementById('trial-wrap').style.display='none';
+}
+function logout(){token=null;location.reload();}
+
+async function toggleDash(){
+  const d=document.getElementById('dash');
+  if(d.style.display==='none'){d.style.display='block';d.scrollIntoView({behavior:'smooth',block:'center'});await refreshDash();}
+  else d.style.display='none';
+}
+async function refreshDash(){
+  const h={Authorization:'Bearer '+token};
+  const u=await (await fetch('/api/v1/account/usage',{headers:h})).json();
+  document.getElementById('usage-info').innerText=`${u.plan.toUpperCase()} plan · ${u.used_this_month} of ${u.monthly_quota} scans used this month`;
+  document.getElementById('usage-fill').style.width=Math.min(100,100*u.used_this_month/u.monthly_quota)+'%';
+  const keys=await (await fetch('/api/v1/account/api-keys',{headers:h})).json();
+  document.getElementById('key-list').innerHTML=keys.map(k=>`<li><span>${k.name} · <code>${k.prefix}…</code></span><button class="btn ghost sm" onclick="revokeKey(${k.id})">Revoke</button></li>`).join('')||'<li class="muted">No API keys yet</li>';
+}
+async function createKey(){
+  const r=await fetch('/api/v1/account/api-keys',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({name:'key-'+Date.now()%10000})});
+  const k=await r.json();
+  document.getElementById('new-key').style.display='block';
+  document.getElementById('new-key-val').innerText=k.key;
+  refreshDash();
+}
+async function revokeKey(id){
+  await fetch('/api/v1/account/api-keys/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+token}});
+  refreshDash();
+}
+
+const drop=document.getElementById('drop'),fileInput=document.getElementById('file');
+['dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{
+  e.preventDefault();drop.classList.toggle('over',ev==='dragover');
+  if(ev==='drop'&&e.dataTransfer.files[0])setFiles(e.dataTransfer.files);
+}));
+fileInput.addEventListener('change',()=>fileInput.files[0]&&setFiles(fileInput.files));
+function setFiles(list){
+  if(appMode==='single'){
+    fileBlob=list[0];
+    document.getElementById('drop-inner').innerHTML=`<img src="${URL.createObjectURL(list[0])}" alt="Selected photo">`;
+  }else{
+    fileBlobs=[...list].slice(0,8);
+    document.getElementById('drop-inner').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">'+fileBlobs.map(f=>`<img src="${URL.createObjectURL(f)}" style="max-height:72px;object-fit:cover;border-radius:6px">`).join('')+`</div><small style="display:block;margin-top:8px">${fileBlobs.length} photo(s) selected</small>`;
+  }
+}
+
+async function analyze(){
+  const err=document.getElementById('an-err');err.innerText='';
+  if(appMode==='single'&&!fileBlob){err.innerText='Choose a photo first.';return;}
+  if(appMode==='inspect'&&fileBlobs.length<2){err.innerText='Full inspection needs at least 2 photos.';return;}
+  if(!token&&trialLeft<=0){openAuth('register','Your 3 complimentary scans are used. The free account includes 15 scans every month.');return;}
+  document.getElementById('placeholder').style.display='none';
+  document.getElementById('results').style.display='none';
+  document.getElementById('inspection-results').style.display='none';
+  document.getElementById('warn-banner').style.display='none';
+  document.getElementById('loading').style.display='block';
+  document.getElementById('analyze').disabled=true;
+  try{
+    const conf=document.getElementById('conf').value;
+    const fd=new FormData();let r;
+    if(appMode==='single'){
+      fd.append('file',fileBlob);
+      if(token) r=await fetch(`/api/v1/assess?confidence=${conf}${vehParams()}`,{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
+      else r=await fetch(`/api/v1/trial/assess?x=1${vehParams()}`,{method:'POST',body:fd});
+    }else{
+      fileBlobs.forEach(f=>fd.append('files',f));
+      r=await fetch(`/api/v1/inspect?confidence=${conf}${vehParams()}`,{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
+    }
+    if(!r.ok)throw new Error((await r.json()).detail||'Analysis failed');
+    const data=await r.json();
+    if(!token){
+      localStorage.setItem('sc_trials',String((+localStorage.getItem('sc_trials')||0)+1));
+      await refreshTrial();
+      if(typeof data.trial_remaining==='number'){trialLeft=Math.min(trialLeft,data.trial_remaining);document.getElementById('trial-left').innerText=trialLeft;}
+    }
+    appMode==='single'?render(data):renderInspection(data);
+    if(!token&&trialLeft<=0)setTimeout(()=>openAuth('register','That was your last complimentary scan — create a free account to continue (15 scans/month).'),2600);
+  }catch(e){err.innerText=e.message;document.getElementById('placeholder').style.display='block';}
+  finally{
+    document.getElementById('loading').style.display='none';
+    document.getElementById('analyze').disabled=false;
+  }
+}
+
+function render(res){
+  document.getElementById('inspection-results').style.display='none';
+  const wb=document.getElementById('warn-banner');
+  if(res.warning){wb.style.display='block';wb.innerHTML='<b>Setup required:</b> '+res.warning;}
+  else wb.style.display='none';
+  document.getElementById('results').style.display='block';
+  const ann=document.getElementById('img-annotated');
+  ann.src=res.annotated_image?'data:image/jpeg;base64,'+res.annotated_image:'';
+  const cam=document.getElementById('img-gradcam'),noCam=document.getElementById('no-cam');
+  if(res.gradcam_image){cam.src='data:image/jpeg;base64,'+res.gradcam_image;cam.style.display='block';noCam.style.display='none';}
+  else{cam.style.display='none';noCam.style.display='block';}
+  document.getElementById('veh-summary').innerText=vehLabel()?('Vehicle: '+vehLabel()):'';
+  document.getElementById('damage-list').innerHTML=res.damages.length?res.damages.map((d,i)=>`
+    <div class="dmg" style="animation-delay:${i*0.1}s">
+      <div><b>${d.damage_type}</b><div class="sub">${d.repair} · detection ${(100*d.detection_confidence).toFixed(0)}% · severity ${(100*d.severity_confidence).toFixed(0)}%</div></div>
+      <div style="text-align:right"><span class="sev ${d.severity}">${d.severity.toUpperCase()}</span><div class="money" style="margin-top:5px">$${d.cost_min.toLocaleString()} – $${d.cost_max.toLocaleString()}</div></div>
+    </div>`).join(''):(res.warning?'':'<p class="muted">No damage detected in this photo.</p>');
+  document.getElementById('total-cost').innerText=`$${res.total_min.toLocaleString()} – $${res.total_max.toLocaleString()}`;
+  showTab(res.warning?'detection':'detection');
+}
+
+const GRADE_COLORS={A:'#10b981',B:'#84cc16',C:'#f59e0b',D:'#f97316',E:'#ef4444'};
+function renderInspection(rep){
+  lastReport=rep;
+  document.getElementById('results').style.display='none';
+  document.getElementById('inspection-results').style.display='block';
+  const badge=document.getElementById('grade-badge');
+  badge.innerText=rep.condition_grade;
+  badge.style.background=GRADE_COLORS[rep.condition_grade]+'1a';
+  badge.style.color=GRADE_COLORS[rep.condition_grade];
+  badge.style.border='2px solid '+GRADE_COLORS[rep.condition_grade];
+  document.getElementById('grade-title').innerText=`${rep.purchase_recommendation||('Grade '+rep.condition_grade)} · Report ${rep.report_id}`+(vehLabel()?' · '+vehLabel():'');
+  document.getElementById('grade-summary').innerText=rep.condition_summary;
+  document.getElementById('grade-reco').innerText=rep.recommendation;
+  const all=rep.angles.flatMap(a=>a.damages.map(d=>({...d,angle:a.angle})));
+  document.getElementById('insp-damages').innerHTML=all.length?all.map((d,i)=>`
+    <div class="dmg" style="animation-delay:${i*0.1}s">
+      <div><b>${d.damage_type}</b> <span class="muted">(${d.angle})</span><div class="sub">${d.repair}</div></div>
+      <div style="text-align:right"><span class="sev ${d.severity}">${d.severity.toUpperCase()}</span><div class="money" style="margin-top:5px">$${d.cost_min.toLocaleString()} – $${d.cost_max.toLocaleString()}</div></div>
+    </div>`).join(''):'<p class="muted">No visible damage detected in any photo.</p>';
+  document.getElementById('insp-total').innerText=`$${rep.estimated_repair_min.toLocaleString()} – $${rep.estimated_repair_max.toLocaleString()}`;
+  document.getElementById('insp-angles').innerHTML=rep.angles.filter(a=>a.annotated_image).map(a=>`<div><img class="result-img" src="data:image/jpeg;base64,${a.annotated_image}" alt="${a.angle}"><p class="muted" style="text-align:center;margin-top:4px">${a.angle}</p></div>`).join('');
+  document.getElementById('insp-disclaimer').innerText=rep.disclaimer;
+}
+function showTab(t){
+  document.querySelectorAll('.tab[data-t]').forEach(el=>el.classList.toggle('active',el.dataset.t===t));
+  ['detection','gradcam','report'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'block':'none');
+}
+</script>
+</body>
+</html>
