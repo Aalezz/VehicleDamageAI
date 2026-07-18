@@ -1,216 +1,154 @@
-# 🚗 VehicleDamageAI
+# 🚗 Suraya Car (VehicleDamageAI)
 
-> **AI-powered vehicle damage detection, severity classification & repair cost estimation**
+> **AI-powered vehicle damage detection, severity classification & repair cost estimation — now a full production web app.**
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.3-red?logo=pytorch)](https://pytorch.org)
 [![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-brightgreen)](https://ultralytics.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
-[![HuggingFace](https://img.shields.io/badge/🤗-Live%20Demo-orange)](https://huggingface.co/spaces/Aalezz/VehicleDamageAI)
 
----
+Upload a photo of a damaged vehicle and get, in under a second:
 
-## 📌 Overview
+1. **Where** the damage is and which part is affected (YOLOv8m)
+2. **How severe** it is — minor / moderate / severe (EfficientNetV2-S)
+3. **Why** the model decided that (Grad-CAM heatmaps)
+4. **How much** the repair will cost (rule-based cost engine)
 
-VehicleDamageAI is a **2-stage deep learning pipeline** that takes a photo of a damaged vehicle and automatically:
+## What's in v2.0
 
-1. **Detects** where the damage is and what part is affected
-2. **Classifies** how severe the damage is
-3. **Explains** the AI decision with visual heatmaps
-4. **Estimates** the repair cost
+The original Colab research pipeline is now a sellable, multi-user web product:
 
----
+| Capability | Details |
+|---|---|
+| REST API | FastAPI, OpenAPI docs at `/docs` |
+| Web app | Polished single-page frontend at `/` — upload, results, dashboard |
+| Accounts | Email + password registration, JWT sessions |
+| API keys | Per-user keys (`X-API-Key` header) for programmatic access |
+| Plans & quotas | Free / Pro / Business monthly quotas, enforced server-side |
+| Rate limiting | Per-user sliding window (default 20 req/min) |
+| Usage history | Every assessment stored and queryable |
+| Deployment | Dockerfile + docker-compose, SQLite → Postgres via one env var |
+| Tests | `pytest` suite that runs without GPU (`DEMO_MODE=true`) |
 
-## 🎯 Demo
-
-| Input | Detection | Grad-CAM |
-|-------|-----------|----------|
-| Car photo | Bounding boxes with labels | AI attention heatmap |
-
-> 🔗 **Try it live:** [huggingface.co/spaces/Aalezz/VehicleDamageAI](https://huggingface.co/spaces/Aalezz/VehicleDamageAI)
-
----
-
-## 🧠 Architecture
-
-```
-Input Image
-     │
-     ▼
-┌─────────────────────┐
-│   YOLOv8m Detector  │  ← Stage 1: WHERE is damage + WHAT type
-│   (Object Detection)│
-└─────────────────────┘
-     │
-     ▼ (cropped damage regions)
-┌─────────────────────┐
-│ EfficientNetV2-S    │  ← Stage 2: HOW BAD is the damage
-│ (Classification)    │
-└─────────────────────┘
-     │
-     ▼
-┌─────────────────────┐
-│   Grad-CAM          │  ← WHY did the model decide this
-│ (Explainability)    │
-└─────────────────────┘
-     │
-     ▼
-┌─────────────────────┐
-│  Cost Estimator     │  ← HOW MUCH will it cost to repair
-│  (Rule Engine)      │
-└─────────────────────┘
-```
-
----
-
-## 📊 Model Performance
-
-| Model | Metric | Score |
-|-------|--------|-------|
-| YOLOv8m | mAP@0.5 | ~0.82 |
-| YOLOv8m | mAP@0.5:0.95 | ~0.58 |
-| EfficientNetV2-S | Val Accuracy | ~89% |
-| Full Pipeline | Inference Time | < 0.3s |
-
----
-
-## 🏷️ Damage Classes
-
-| Class | Description |
-|-------|-------------|
-| 🚗 Bonnet | Hood / front cover damage |
-| 🛡️ Bumper | Front or rear bumper |
-| 🚪 Dickey | Trunk / boot lid |
-| 🚪 Door | Side door panels |
-| 🔧 Fender | Side panels above wheels |
-| 💡 Light | Headlights / taillights |
-| 🪟 Windshield | Front or rear glass |
-
-## 🎨 Severity Levels
-
-| Level | Meaning | Example Cost Range |
-|-------|---------|-------------------|
-| 🟢 Minor | Surface scratches, small dents | $150 – $600 |
-| 🟡 Moderate | Panel damage, partial replacement | $400 – $1,500 |
-| 🔴 Severe | Full replacement required | $900 – $4,000 |
-
----
-
-## 🛠️ Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| Object Detection | YOLOv8m (Ultralytics) |
-| Classification | EfficientNetV2-S (timm) |
-| Explainability | Grad-CAM (pytorch-grad-cam) |
-| Data Augmentation | Albumentations |
-| Training Framework | PyTorch 2.3 |
-| Dataset | Car Damage Detection — Roboflow |
-| Web Interface | Gradio |
-| Deployment | HuggingFace Spaces |
-
----
-
-## 📁 Project Structure
-
-```
-VehicleDamageAI/
-├── VehicleDamageAI_Colab.ipynb   # Full training notebook (Google Colab)
-├── app.py                         # Gradio web application
-├── requirements.txt               # Dependencies
-├── models/
-│   ├── yolov8_detector.pt         # Trained YOLOv8m weights
-│   └── efficientnetv2.pth         # Trained EfficientNetV2-S weights
-├── examples/                      # Sample car images
-└── outputs/
-    ├── dataset_samples.png        # Dataset visualization
-    ├── yolo_training_curves.png   # Training metrics
-    ├── confusion_matrix.png       # Classifier evaluation
-    └── gradcam.png                # Grad-CAM examples
-```
-
----
-
-## 🚀 Quick Start
-
-### Run locally
+## Quick start
 
 ```bash
-# Clone repo
 git clone https://github.com/Aalezz/VehicleDamageAI.git
 cd VehicleDamageAI
 
-# Install dependencies
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-# Launch app
-python app.py
+cp .env.example .env      # set SECRET_KEY!
+
+# Place your trained weights (optional but recommended):
+#   models/yolov8_detector.pt
+#   models/efficientnetv2.pth
+# Without them the app falls back to a pretrained detector so it still runs.
+
+uvicorn app.main:app --reload
 ```
 
-### Train from scratch (Google Colab)
+Open **http://localhost:8000** for the web app, **http://localhost:8000/docs** for the API.
 
-1. Open `VehicleDamageAI_Colab.ipynb` in Google Colab
-2. Enable **T4 GPU**: Runtime → Change runtime type → T4 GPU
-3. Run all cells top to bottom
-4. Training takes ~45 mins on T4
+### Docker
 
----
-
-## 📈 Training Details
-
-**Stage 1 — YOLOv8m Detector**
-- Dataset: 3,291 images, 7 damage classes
-- Epochs: 50 with early stopping (patience=10)
-- Optimizer: AdamW, lr=0.001
-- Augmentation: mosaic, mixup, flipping, rotation
-
-**Stage 2 — EfficientNetV2-S Classifier**
-- Input: Cropped damage regions from Stage 1
-- Epochs: 30 with backbone freeze for first 5
-- Optimizer: AdamW with cosine annealing
-- Classes: minor / moderate / severe
-
----
-
-## 📝 Results
-
-Sample output on a test image:
-
-```
-🚗 VEHICLE DAMAGE ASSESSMENT REPORT
-================================================
-1. 🚪 DOOR
-   Severity  : 🟡 MODERATE (87% confidence)
-   Repair    : Body filler + repaint
-   Est. Cost : $500 – $1,200
-
-2. 💡 LIGHT
-   Severity  : 🔴 SEVERE (91% confidence)
-   Repair    : Full assembly replacement
-   Est. Cost : $700 – $2,000
-================================================
-💵 TOTAL ESTIMATE  : $1,200 – $3,200
-📊 DAMAGES FOUND   : 2
+```bash
+cp .env.example .env      # edit SECRET_KEY
+docker compose up --build
 ```
 
----
+## API usage
 
-## 👨‍💻 Author
+```bash
+# Register + login
+curl -X POST localhost:8000/api/v1/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"you@example.com","password":"yourpassword1"}'
 
-**Aalezz** — AI/ML Engineer
+TOKEN=$(curl -s -X POST localhost:8000/api/v1/auth/login \
+  -d 'username=you@example.com&password=yourpassword1' | jq -r .access_token)
 
-[![GitHub](https://img.shields.io/badge/GitHub-Aalezz-black?logo=github)](https://github.com/Aalezz)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/YOUR_LINKEDIN)
+# Assess a photo
+curl -X POST 'localhost:8000/api/v1/assess?confidence=0.25' \
+  -H "Authorization: Bearer $TOKEN" \
+  -F 'file=@car_damage.jpg'
+```
 
----
+Response (truncated):
 
-## 📄 License
+```json
+{
+  "damages": [
+    {"damage_type": "Door", "severity": "moderate",
+     "detection_confidence": 0.91, "severity_confidence": 0.87,
+     "repair": "Body filler + repaint", "cost_min": 500, "cost_max": 1200,
+     "box": [120, 200, 420, 480]}
+  ],
+  "total_min": 500, "total_max": 1200, "currency": "USD",
+  "inference_ms": 240.5,
+  "annotated_image": "<base64 JPEG>", "gradcam_image": "<base64 JPEG>"
+}
+```
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+Or create an API key in the dashboard and call with `-H "X-API-Key: vda_..."`.
 
----
+## Architecture
 
-## ⚠️ Disclaimer
+```
+Photo ──► YOLOv8m detector ──► crop regions ──► EfficientNetV2-S severity
+                │                                      │
+                ▼                                      ▼
+         annotated image                        Grad-CAM heatmap
+                └──────────────┬───────────────────────┘
+                               ▼
+                     Cost engine ──► JSON report ($ min–max)
+```
 
-Cost estimates are indicative only and based on US average repair pricing.
-Actual costs vary by location, vehicle make/model, and repair shop.
+- **Damage classes (7):** Bonnet, Bumper, Dickey, Door, Fender, Light, Windshield
+- **Severity:** minor 🟢 / moderate 🟡 / severe 🔴
+- **Performance:** YOLOv8m mAP@0.5 ≈ 0.82 · classifier val acc ≈ 89% · < 0.3 s/image on GPU
+
+## Training
+
+The full training pipeline lives in [`notebooks/VehicleDamageAI_Colab.ipynb`](notebooks/VehicleDamageAI_Colab.ipynb) (Google Colab, ~45 min on a T4). It exports the two weight files the app consumes.
+
+## Scaling to 1,000+ users
+
+- Switch to Postgres: `DATABASE_URL=postgresql+psycopg2://...`
+- Run 1 uvicorn worker per GPU; add replicas behind nginx/Traefik
+- GPU strongly recommended (~0.3 s/image vs several seconds on CPU)
+- Rate limits and monthly quotas are already enforced per user
+- For billing, wire the Stripe env vars and add a checkout webhook (schema is plan-ready: `users.plan`)
+
+## Project structure
+
+```
+app/
+├── main.py              # FastAPI app
+├── config.py            # env-based settings
+├── auth.py              # JWT, API keys, quotas, rate limiting
+├── database.py, models.py, schemas.py
+├── routers/             # auth, account, assess
+├── ml/
+│   ├── pipeline.py      # 2-stage inference (lazy-loaded, thread-safe)
+│   └── cost_engine.py   # repair cost rules
+└── static/index.html    # web frontend
+tests/test_api.py        # runs without GPU (DEMO_MODE)
+Dockerfile, docker-compose.yml
+```
+
+## Tests
+
+```bash
+DEMO_MODE=true pytest tests/ -v
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+## Disclaimer
+
+Cost estimates are indicative only, based on US average repair pricing. Actual costs vary by location, vehicle make/model, and repair shop.
